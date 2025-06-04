@@ -1,0 +1,70 @@
+// ————————————————
+// Código del servidor (Apps Script)
+// ————————————————
+
+/**
+ * ID de tu Google Sheets “RSVP_App”
+ * (reemplaza el texto por tu ID real)
+ */
+var SPREADSHEET_ID = '11AWTUW2ELm3I547ShYpRtRT_FwODWx-RffWjXvdCMHw';
+
+/**
+ * Función que se ejecuta cuando un usuario carga la Web App (mediante método GET).
+ * Retorna el archivo HTML (la página con el formulario).
+ */
+function doGet() {
+  return HtmlService
+    .createHtmlOutputFromFile('Index')
+    .setTitle('Confirmación de Asistencia');
+}
+
+/**
+ * Lee todos los nombres de la hoja "Asignaciones" (columna A),
+ * para enviarlos al formulario y mostrar el <select> con opciones.
+ */
+function getAsignaciones() {
+  // Abrimos el spreadsheet por su ID
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  // Seleccionamos la hoja llamada "Asignaciones"
+  var hoja = ss.getSheetByName('Asignaciones');
+  // Tomamos todos los valores desde A2 hacia abajo
+  var rangoDatos = hoja.getRange('A2:A').getValues();
+
+  var nombres = [];
+  // Recorremos cada fila y, si no está vacía, agregamos el nombre al array
+  rangoDatos.forEach(function(fila) {
+    var nombre = fila[0];
+    if (nombre && nombre.toString().trim() !== '') {
+      nombres.push(nombre.toString());
+    }
+  });
+  // Devolvemos la lista de nombres (array de strings)
+  return nombres;
+}
+
+/**
+ * Guarda en la hoja "Respuestas" la fila con:
+ *   NOMBRE | CONFIRMA | CANTIDAD_INVITADOS | COMENTARIOS | TIMESTAMP
+ *
+ * Recibe un objeto 'form' con:
+ *   form.nombre
+ *   form.confirma
+ *   form.cantidadInvitados
+ *   form.comentarios
+ */
+function guardarRespuesta(form) {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var hoja = ss.getSheetByName('Respuestas');
+
+  // Se agregan los valores en el orden de las columnas (A a E)
+  hoja.appendRow([
+    form.nombre,
+    form.confirma,
+    form.cantidadInvitados,
+    form.comentarios,
+    new Date() // TIMESTAMP automático
+  ]);
+
+  // Retornamos un mensaje de éxito al cliente
+  return 'Gracias por tu confirmación.';
+}
